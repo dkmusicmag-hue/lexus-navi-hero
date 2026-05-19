@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lexus-Navi — Услуги</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin&family=Wix+Madefor+Display:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+
+    /* ── Fixed 1920×1080 canvas, scaled to viewport ── */
+    .scene {
+      position: absolute; top: 0; left: 0;
+      width: 1920px; height: 1080px;
+      transform-origin: top left;
+      background: #000; overflow: hidden;
+    }
+
+    /* ── Background layers ── */
+    .bg-layer { position: absolute; inset: 0; z-index: 0; }
+    .bg-img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: opacity 0.45s ease;
+    }
+    .bg-img.off { opacity: 0; }
+    .bg-black {
+      position: absolute; inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ── Gradient overlays ── */
+    .overlay-top {
+      position: absolute; left: 0; right: 0; top: 0;
+      height: 420px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.5) 45%, transparent 100%);
+      z-index: 2; pointer-events: none;
+    }
+    .overlay-bottom {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      height: 340px;
+      background: linear-gradient(to top, #000 0%, transparent 100%);
+      z-index: 2; pointer-events: none;
+    }
+
+    /* ── Dots patterns ── */
+    .dots { position: absolute; pointer-events: none; z-index: 3; }
+    .dots-1 { top: 93px; right: 0; width: 578px; height: 440px; }
+    .dots-2 { bottom: 40px; left: 550px; width: 578px; height: 440px; }
+    .dots svg { display: block; width: 100%; height: 100%; }
+
+    /* ── Title ── */
+    .svc-title {
+      position: absolute; left: 80px; top: 100px;
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: 64px; line-height: 1.1; letter-spacing: -0.64px;
+      color: #fff; z-index: 4;
+      opacity: 0; transform: translateY(32px);
+      animation: fade-up 0.6s ease 0.2s forwards;
+    }
+
+    /* ── Counter ── */
+    .svc-counter {
+      position: absolute; right: 80px; top: 119px;
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: 24px; line-height: 1.1; letter-spacing: 0.24px;
+      color: #fff; display: flex; gap: 9px; align-items: center;
+      z-index: 4;
+      opacity: 0; transform: translateY(16px);
+      animation: fade-up 0.5s ease 0.35s forwards;
+    }
+    .svc-counter .dim { opacity: 0.4; }
+
+    /* ── Accordion list ── */
+    .svc-list {
+      position: absolute; left: 80px; top: 258px;
+      width: 592px; z-index: 4;
+      opacity: 0; transform: translateY(24px);
+      animation: fade-up 0.6s ease 0.5s forwards;
+    }
+
+    /* ── Dividers ── */
+    .svc-divider {
+      height: 1px; background: rgba(255,255,255,0.18);
+      transform-origin: left center; transform: scaleX(0);
+      position: relative;
+      animation: draw-line 0.75s cubic-bezier(0.4,0,0.2,1) forwards;
+    }
+    /* Active top-divider: brighter + half-width accent line */
+    .svc-item.active .svc-divider.top-div {
+      background: rgba(255,255,255,0.35);
+    }
+    .svc-item.active .svc-divider.top-div::after {
+      content: '';
+      position: absolute; left: 0; top: 0;
+      width: 50%; height: 1px;
+      background: rgba(255,255,255,0.7);
+    }
+
+    /* ── Item ── */
+    .svc-item { position: relative; }
+
+    .svc-item-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 22px 0; cursor: pointer; position: relative;
+    }
+
+    .svc-item-name {
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: 24px; line-height: 1.1; letter-spacing: 0.24px;
+      color: rgba(255,255,255,0.7);
+      transition: color 0.3s ease;
+    }
+    .svc-item.active .svc-item-name { color: #fff; }
+    .svc-item:not(.active):hover .svc-item-name { color: rgba(255,255,255,0.9); }
+
+    /* Arrow button */
+    .svc-arrow-btn {
+      flex-shrink: 0; margin-left: 12px;
+      width: 64px; height: 40px;
+      background: #15a0fd; border-radius: 84px;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; cursor: pointer;
+      opacity: 0; transform: scale(0.75);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .svc-item.active .svc-arrow-btn { opacity: 1; transform: scale(1); }
+    .svc-arrow-btn svg {
+      width: 17px; height: 17px; fill: #fff;
+      transform: rotate(90deg);
+    }
+
+    /* Expand/collapse body */
+    .svc-item-body {
+      display: grid; grid-template-rows: 0fr;
+      transition: grid-template-rows 0.42s cubic-bezier(0.4,0,0.2,1);
+      overflow: hidden;
+    }
+    .svc-item.active .svc-item-body { grid-template-rows: 1fr; }
+    .svc-item-body-inner { overflow: hidden; }
+
+    .svc-item-desc {
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 16px; line-height: 1.4;
+      color: rgba(255,255,255,0.7);
+      padding-bottom: 20px;
+      opacity: 0; transform: translateY(6px);
+      transition: opacity 0.3s ease 0.12s, transform 0.3s ease 0.12s;
+    }
+    .svc-item.active .svc-item-desc { opacity: 1; transform: translateY(0); }
+
+    /* ── Keyframes ── */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes draw-line {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+
+    /* Counter value fade on change */
+    @keyframes counter-pop {
+      0%   { opacity: 0; transform: translateY(6px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .counter-flash { animation: counter-pop 0.25s ease forwards; }
+  </style>
+</head>
+<body>
+<div class="scene" id="scene">
+
+  <!-- Background layers -->
+  <div class="bg-layer">
+    <img class="bg-img" id="bg-a" src="assets/svc-1.jpg" alt="">
+    <img class="bg-img off" id="bg-b" src="" alt="">
+    <div class="bg-black" id="bg-black"></div>
+  </div>
+
+  <!-- Gradient overlays -->
+  <div class="overlay-top"></div>
+  <div class="overlay-bottom"></div>
+
+  <!-- Dots 1 — top right -->
+  <div class="dots dots-1">
+    <svg id="dots-svg-1" viewBox="0 0 578 440">
+      <defs>
+        <radialGradient id="dotGrad1" cx="162" cy="97" r="210" gradientUnits="userSpaceOnUse">
+          <stop offset="0%"   stop-color="#fff" stop-opacity="0.65"/>
+          <stop offset="30%"  stop-color="#fff" stop-opacity="0.28"/>
+          <stop offset="65%"  stop-color="#fff" stop-opacity="0.05"/>
+          <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+        </radialGradient>
+        <pattern id="dotPat1" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
+          <circle cx="14" cy="14" r="1.6" fill="white"/>
+        </pattern>
+        <mask id="dotMask1">
+          <rect width="578" height="440" fill="url(#dotGrad1)"/>
+        </mask>
+      </defs>
+      <rect width="578" height="440" fill="url(#dotPat1)" mask="url(#dotMask1)"/>
+    </svg>
+  </div>
+
+  <!-- Dots 2 — lower left -->
+  <div class="dots dots-2">
+    <svg id="dots-svg-2" viewBox="0 0 578 440">
+      <defs>
+        <radialGradient id="dotGrad2" cx="358" cy="185" r="200" gradientUnits="userSpaceOnUse">
+          <stop offset="0%"   stop-color="#fff" stop-opacity="0.65"/>
+          <stop offset="30%"  stop-color="#fff" stop-opacity="0.28"/>
+          <stop offset="65%"  stop-color="#fff" stop-opacity="0.05"/>
+          <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+        </radialGradient>
+        <pattern id="dotPat2" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
+          <circle cx="14" cy="14" r="1.6" fill="white"/>
+        </pattern>
+        <mask id="dotMask2">
+          <rect width="578" height="440" fill="url(#dotGrad2)"/>
+        </mask>
+      </defs>
+      <rect width="578" height="440" fill="url(#dotPat2)" mask="url(#dotMask2)"/>
+    </svg>
+  </div>
+
+  <!-- Title -->
+  <div class="svc-title">Что мы предлагаем</div>
+
+  <!-- Counter -->
+  <div class="svc-counter">
+    <span id="counter-val">01</span>
+    <span class="dim">/</span>
+    <span class="dim">08</span>
+  </div>
+
+  <!-- Accordion list (built by JS) -->
+  <div class="svc-list" id="svc-list"></div>
+
+</div>
+<script>
+// ─────────────────────────────────────────────
+// Data
+// ─────────────────────────────────────────────
+var SERVICES = [
+  {
+    name: 'Русификация Lexus / Toyota',
+    desc: 'Перевод интерфейса мультимедийной системы на русский язык для автомобилей с зарубежных рынков: 🇰🇷 Корея, 🇯🇵 Япония, 🇨🇳 Китай, 🇦🇪 ОАЭ, 🇺🇸 США.',
+    img: 'assets/svc-1.jpg', url: '#service-1'
+  },
+  {
+    name: 'Ремонт мультимедиа Lexus / Toyota',
+    desc: 'Комплексное восстановление мультимедийных систем: устраняем неполадки и возвращаем комфорт в каждую поездку.',
+    img: 'assets/svc-2.jpg', url: '#service-2'
+  },
+  {
+    name: 'Установка противоугонного комплекса',
+    desc: 'Профессиональный монтаж сертифицированных систем без нарушения штатной электрики. Максимальная безопасность, сохранение гарантии и спокойствие каждый день.',
+    img: 'assets/svc-3.jpg', url: '#service-3'
+  },
+  {
+    name: 'Шумоизоляция автомобиля',
+    desc: 'Снижаем шум и вибрации с помощью многослойных вибро‑ и шумоизоляционных материалов. Тише, теплее и комфортнее в любом режиме движения.',
+    img: 'assets/svc-4.jpg', url: '#service-4'
+  },
+  {
+    name: 'Компьютерная диагностика',
+    desc: 'Полная компьютерная проверка всех электронных систем с чтением ошибок и рекомендациями по ремонту.',
+    img: 'assets/svc-5.jpg', url: '#service-5'
+  },
+  {
+    name: 'Чип-тюнинг',
+    desc: 'Оптимизируем параметры с помощью уникального ПО — для динамичных поездок и заметной экономии топлива.',
+    img: 'assets/svc-6.jpg', url: '#service-6'
+  },
+  {
+    name: 'Установка Android систем',
+    desc: 'Профессиональная интеграция Android‑мультимедиа в штатную систему с сохранением всех заводских функций и гарантией работы.',
+    img: 'assets/svc-7.jpg', url: '#service-7'
+  },
+  {
+    name: 'Активация CarPlay',
+    desc: 'Удобное беспроводное подключение смартфона — все функции CarPlay на экране вашего автомобиля.',
+    img: 'assets/svc-8.jpg', url: '#service-8'
+  }
+];
+
+// ─────────────────────────────────────────────
+// Scene scaling
+// ─────────────────────────────────────────────
+(function() {
+  var scene = document.getElementById('scene');
+  function resize() {
+    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    scene.style.transform = 'scale(' + s + ')';
+    scene.style.left = ((window.innerWidth  - 1920 * s) / 2) + 'px';
+    scene.style.top  = ((window.innerHeight - 1080 * s) / 2) + 'px';
+  }
+  resize();
+  window.addEventListener('resize', resize);
+})();
+
+// ─────────────────────────────────────────────
+// Build accordion HTML
+// ─────────────────────────────────────────────
+var list = document.getElementById('svc-list');
+SERVICES.forEach(function(svc, i) {
+  var item = document.createElement('div');
+  item.className = 'svc-item' + (i === 0 ? ' active' : '');
+  item.dataset.idx = i;
+
+  // Stagger divider draw delay per item
+  var divDelay = (0.52 + i * 0.055).toFixed(3) + 's';
+
+  item.innerHTML =
+    '<div class="svc-divider top-div" style="animation-delay:' + divDelay + ';animation-fill-mode:forwards"></div>' +
+    '<div class="svc-item-header">' +
+      '<span class="svc-item-name">' + svc.name + '</span>' +
+      '<a class="svc-arrow-btn" href="' + svc.url + '">' +
+        '<svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg>' +
+      '</a>' +
+    '</div>' +
+    '<div class="svc-item-body"><div class="svc-item-body-inner">' +
+      '<p class="svc-item-desc">' + svc.desc + '</p>' +
+    '</div></div>';
+
+  list.appendChild(item);
+});
+// Final bottom divider
+var finalDiv = document.createElement('div');
+finalDiv.className = 'svc-divider';
+finalDiv.style.animationDelay = (0.52 + 8 * 0.055).toFixed(3) + 's';
+finalDiv.style.animationFillMode = 'forwards';
+list.appendChild(finalDiv);
+
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+var current   = 0;
+var hovered   = -1;
+var autoTimer = null;
+var bgA       = document.getElementById('bg-a');
+var bgB       = document.getElementById('bg-b');
+var bgBlack   = document.getElementById('bg-black');
+var activeBg  = 'a';
+var counterEl = document.getElementById('counter-val');
+var transitioning = false;
+
+// ─────────────────────────────────────────────
+// Image crossfade through black
+// ─────────────────────────────────────────────
+function switchBg(src) {
+  if (transitioning) return;
+  transitioning = true;
+
+  // Fade to black
+  bgBlack.style.transition = 'opacity 0.22s ease';
+  bgBlack.style.opacity    = '1';
+
+  setTimeout(function() {
+    // Load new image on the hidden layer
+    var next = activeBg === 'a' ? bgB : bgA;
+    var curr = activeBg === 'a' ? bgA : bgB;
+    next.src = src;
+    next.classList.remove('off');
+
+    // Fade black away after tiny buffer for image decode
+    setTimeout(function() {
+      bgBlack.style.transition = 'opacity 0.38s ease';
+      bgBlack.style.opacity    = '0';
+      // Fade out old layer once black is gone
+      setTimeout(function() {
+        curr.classList.add('off');
+        activeBg = activeBg === 'a' ? 'b' : 'a';
+        transitioning = false;
+      }, 420);
+    }, 60);
+  }, 220);
+}
+
+// ─────────────────────────────────────────────
+// Activate a service
+// ─────────────────────────────────────────────
+function activate(index) {
+  if (index === current) return;
+  var items = list.querySelectorAll('.svc-item');
+
+  items[current].classList.remove('active');
+  items[index].classList.add('active');
+
+  current = index;
+
+  // Update counter with flash
+  counterEl.classList.remove('counter-flash');
+  void counterEl.offsetWidth; // reflow to restart anim
+  counterEl.textContent = String(index + 1).padStart(2, '0');
+  counterEl.classList.add('counter-flash');
+
+  // Image switches slightly after text collapses
+  setTimeout(function() { switchBg(SERVICES[index].img); }, 180);
+}
+
+// ─────────────────────────────────────────────
+// Hover interaction
+// ─────────────────────────────────────────────
+list.addEventListener('mouseover', function(e) {
+  var item = e.target.closest('.svc-item');
+  if (!item) return;
+  var idx = parseInt(item.dataset.idx);
+  hovered = idx;
+  clearInterval(autoTimer);
+  autoTimer = null;
+  if (idx !== current) activate(idx);
+});
+
+list.addEventListener('mouseleave', function() {
+  hovered = -1;
+  startTimer();
+});
+
+// ─────────────────────────────────────────────
+// Click → navigate immediately
+// ─────────────────────────────────────────────
+list.addEventListener('click', function(e) {
+  var item = e.target.closest('.svc-item');
+  if (!item) return;
+  var idx = parseInt(item.dataset.idx);
+  // Navigate to service URL
+  window.location.href = SERVICES[idx].url;
+});
+
+// ─────────────────────────────────────────────
+// Auto-timer
+// ─────────────────────────────────────────────
+function startTimer() {
+  clearInterval(autoTimer);
+  autoTimer = setInterval(function() {
+    if (hovered !== -1) return;
+    activate((current + 1) % SERVICES.length);
+  }, 5000);
+}
+
+startTimer();
+
+// ─────────────────────────────────────────────
+// Dots multi-sine animation (same as hero)
+// ─────────────────────────────────────────────
+var grad1 = document.getElementById('dotGrad1');
+var grad2 = document.getElementById('dotGrad2');
+var t0 = null;
+var b1 = { x: 162, y: 97 };
+var b2 = { x: 358, y: 185 };
+var ax = 578 * 0.10;
+var ay = 440 * 0.10;
+
+function dotsFrame(ts) {
+  if (!t0) t0 = ts;
+  var t = (ts - t0) * 0.001;
+  var x1 = b1.x + ax * (0.55 * Math.sin(t * 0.70)       + 0.45 * Math.sin(t * 1.21 + 1.7));
+  var y1 = b1.y + ay * (0.55 * Math.cos(t * 0.50 + 0.8) + 0.45 * Math.cos(t * 0.87 + 3.1));
+  grad1.setAttribute('cx', x1.toFixed(2));
+  grad1.setAttribute('cy', y1.toFixed(2));
+  var x2 = b2.x + ax * (0.55 * Math.cos(t * 0.57 + 2.3) + 0.45 * Math.cos(t * 0.98 + 0.4));
+  var y2 = b2.y + ay * (0.55 * Math.sin(t * 0.79 + 1.5) + 0.45 * Math.sin(t * 1.37 + 2.8));
+  grad2.setAttribute('cx', x2.toFixed(2));
+  grad2.setAttribute('cy', y2.toFixed(2));
+  requestAnimationFrame(dotsFrame);
+}
+requestAnimationFrame(dotsFrame);
+
+// ─────────────────────────────────────────────
+// Preload remaining service images
+// ─────────────────────────────────────────────
+setTimeout(function() {
+  for (var i = 1; i < SERVICES.length; i++) {
+    (function(src) {
+      var img = new Image();
+      img.src = src;
+    })(SERVICES[i].img);
+  }
+}, 1000);
+</script>
+</body>
+</html>
