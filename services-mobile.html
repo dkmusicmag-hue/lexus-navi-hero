@@ -56,13 +56,21 @@
     }
 
     .svc-item {
-      border-top: 1px solid rgba(255,255,255,0.14);
+      position: relative;
+    }
+    .svc-item::before {
+      content: '';
+      display: block;
+      height: 1px;
+      background: rgba(255,255,255,0.14);
+      margin: 0 16px;
     }
     .svc-list::after {
       content: '';
       display: block;
       height: 1px;
       background: rgba(255,255,255,0.14);
+      margin: 0 16px;
     }
 
     /* ── Row (tap target) ── */
@@ -114,7 +122,7 @@
        then object-position: right crops away the dark left half. */
     .svc-img-wrap {
       overflow: hidden;
-      height: 244px;
+      height: 288px;
     }
     .svc-img {
       display: block;
