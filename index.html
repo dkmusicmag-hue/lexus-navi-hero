@@ -36,7 +36,7 @@
       width: 1920px; height: 1080px;
       object-fit: cover;
       opacity: 0;
-      animation: anim-fade-in 1.5s ease 0.3s forwards;
+      transition: opacity 1.5s ease;
     }
 
     /* ──────────────────────────────
@@ -258,7 +258,9 @@
 <div class="scene" id="scene">
 
   <!-- ── VIDEO BACKGROUND ── -->
-  <video class="hero-video" id="hero-video" autoplay muted loop playsinline></video>
+  <video class="hero-video" id="hero-video" autoplay muted loop playsinline preload="auto">
+    <source src="assets/hero-video.mp4" type="video/mp4">
+  </video>
 
   <!-- ── BOTTOM GRADIENT ── -->
   <div class="darker"></div>
@@ -377,15 +379,16 @@
     window.addEventListener('resize', update);
   })();
 
-  /* ── Load video as blob (bypasses GitHub Pages range-request limitation) ── */
-  (function loadVideo() {
-    const video = document.getElementById('hero-video');
-    fetch('assets/hero-video.mp4')
-      .then(function(r) { return r.blob(); })
-      .then(function(blob) {
-        video.src = URL.createObjectURL(blob);
-        video.play();
-      });
+  /* ── Fade in video once it can play ── */
+  (function initVideo() {
+    var video = document.getElementById('hero-video');
+    function show() { video.style.opacity = '1'; }
+    video.addEventListener('canplay', show, { once: true });
+    video.addEventListener('canplaythrough', show, { once: true });
+    /* Fallback: show after 4s regardless (slow connections) */
+    setTimeout(function() { video.style.opacity = '1'; }, 4000);
+    video.load();
+    video.play().catch(function(){});
   })();
 
   /* ── Animate dots gradient origin ──
