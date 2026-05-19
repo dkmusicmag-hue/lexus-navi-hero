@@ -168,6 +168,8 @@
     /* ── Language word ── */
     .lang-wrap {
       flex-shrink: 0;
+      width: 280px;        /* fixed — prevents hover zone shrinking with text */
+      text-align: right;
       cursor: default;
       user-select: none;
     }
@@ -356,7 +358,7 @@
   var WORDS   = ['中文', '한국어', '日本語', 'العربية'];
   var HOVER   = 'Русский';
   var CHARS   = '!@#$%^&*<>?/|ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  var HOLD    = 2600;  // ms — how long to show each word
+  var HOLD    = 1600;  // ms — how long to show each word
   var T_SPEED = 80;   // ms per char when typing
   var D_SPEED = 55;   // ms per char when deleting
 
@@ -439,50 +441,64 @@
     return function cancel() { clearTimeout(scTimer); };
   }
 
-  var cancelFn = null;
+  var cancelFn  = null;
+  var leaveTimer = null;
+  var showing   = false; // true once "Русский" is fully shown
 
-  // ── Hover: scramble → Русский ──
+  // ── Hover: scramble → Русский, then hold ──
   wrap.addEventListener('mouseenter', function() {
-    hovered = true;
+    clearTimeout(leaveTimer); // cancel any pending leave
+    if (hovered) return;      // already handling hover
+    hovered  = true;
+    showing  = false;
     clearTimeout(timer);
     if (cancelFn) { cancelFn(); cancelFn = null; }
+    setCursor(false);
 
-    // Quick erase then scramble
     var curr = el.textContent;
     var ei   = curr.length;
     function erase() {
+      if (!hovered) return;
       ei--;
       el.textContent = curr.slice(0, ei);
       if (ei > 0) {
         timer = setTimeout(erase, D_SPEED);
       } else {
-        cancelFn = scrambleTo(HOVER, null);
+        cancelFn = scrambleTo(HOVER, function() {
+          showing = true; // fully shown — stay here until mouseleave
+        });
       }
     }
     if (ei > 0) erase();
-    else cancelFn = scrambleTo(HOVER, null);
+    else cancelFn = scrambleTo(HOVER, function() { showing = true; });
   });
 
-  // ── Mouseleave: erase Русский, resume cycle ──
+  // ── Mouseleave: debounced, erase Русский, resume cycle ──
   wrap.addEventListener('mouseleave', function() {
-    hovered = false;
-    if (cancelFn) { cancelFn(); cancelFn = null; }
-    clearTimeout(timer);
+    // 60ms debounce prevents spurious leave from text-width layout shifts
+    leaveTimer = setTimeout(function() {
+      if (!hovered) return;
+      hovered  = false;
+      showing  = false;
+      if (cancelFn) { cancelFn(); cancelFn = null; }
+      clearTimeout(timer);
 
-    var src = HOVER;
-    var ei  = src.length;
-    function erase() {
-      ei--;
-      el.textContent = src.slice(0, ei);
-      if (ei > 0) {
-        timer = setTimeout(erase, D_SPEED);
-      } else {
-        deleting  = false;
-        charIdx   = 0;
-        timer = setTimeout(tick, 180);
+      var src = el.textContent; // erase whatever is currently shown
+      var ei  = src.length;
+      function erase() {
+        ei--;
+        el.textContent = src.slice(0, ei);
+        if (ei > 0) {
+          timer = setTimeout(erase, D_SPEED);
+        } else {
+          deleting = false;
+          charIdx  = 0;
+          timer = setTimeout(tick, 180);
+        }
       }
-    }
-    erase();
+      if (ei > 0) erase();
+      else { deleting = false; charIdx = 0; timer = setTimeout(tick, 180); }
+    }, 60);
   });
 
   // Start cycle after entrance animation settles
