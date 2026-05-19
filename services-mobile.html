@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lexus-Navi — Услуги</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin&family=Wix+Madefor+Display:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #000; color: #fff; -webkit-font-smoothing: antialiased; }
+
+    .svc-block {
+      background: #000;
+      padding-bottom: 48px;
+    }
+
+    /* ── Header ── */
+    .svc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 52px 20px 30px;
+      opacity: 0;
+      transform: translateY(18px);
+      animation: fade-up 0.55s ease 0.1s forwards;
+    }
+
+    .svc-heading {
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: 30px;
+      line-height: 1.08;
+      letter-spacing: -0.3px;
+      color: #fff;
+    }
+
+    .svc-counter {
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: 13px;
+      line-height: 1;
+      color: rgba(255,255,255,0.35);
+      flex-shrink: 0;
+      margin-left: 16px;
+      padding-bottom: 4px;
+    }
+    .svc-counter em {
+      font-style: normal;
+      color: #fff;
+    }
+
+    /* ── List ── */
+    .svc-list {
+      opacity: 0;
+      animation: fade-up 0.55s ease 0.28s forwards;
+    }
+
+    .svc-item {
+      border-top: 1px solid rgba(255,255,255,0.14);
+    }
+    .svc-list::after {
+      content: '';
+      display: block;
+      height: 1px;
+      background: rgba(255,255,255,0.14);
+    }
+
+    /* ── Row (tap target) ── */
+    .svc-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 20px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .svc-name {
+      flex: 1;
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: 15px;
+      line-height: 1.35;
+      letter-spacing: 0.05px;
+      color: rgba(255,255,255,0.55);
+      transition: color 0.22s ease;
+    }
+    .svc-item.active .svc-name { color: #fff; }
+
+    /* Chevron */
+    .svc-chevron {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      color: rgba(255,255,255,0.28);
+      transition: transform 0.38s cubic-bezier(0.4,0,0.2,1), color 0.22s ease;
+    }
+    .svc-item.active .svc-chevron {
+      transform: rotate(180deg);
+      color: #15a0fd;
+    }
+
+    /* ── Accordion body ── */
+    .svc-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.44s cubic-bezier(0.4,0,0.2,1);
+    }
+    .svc-item.active .svc-body { grid-template-rows: 1fr; }
+    .svc-body-inner { overflow: hidden; }
+
+    /* ── Image ──
+       Container taller than the image aspect ratio → cover scales to width,
+       then object-position: right crops away the dark left half. */
+    .svc-img-wrap {
+      overflow: hidden;
+      height: 244px;
+    }
+    .svc-img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: right center;
+      opacity: 0;
+      transform: scale(1.04);
+      transition: opacity 0.38s ease 0.12s, transform 0.5s ease 0.1s;
+    }
+    .svc-item.active .svc-img {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* ── Description ── */
+    .svc-desc {
+      padding: 18px 20px 4px;
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 14px;
+      line-height: 1.65;
+      color: rgba(255,255,255,0.58);
+    }
+
+    /* ── CTA button ── */
+    .svc-footer {
+      padding: 16px 20px 24px;
+    }
+
+    .svc-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #15a0fd;
+      color: #000;
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+      padding: 11px 18px 11px 20px;
+      border-radius: 999px;
+      text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .svc-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: #000;
+      flex-shrink: 0;
+    }
+
+    /* ── Entrance animation ── */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<div class="svc-block">
+
+  <div class="svc-header">
+    <h2 class="svc-heading">Что мы<br>предлагаем</h2>
+    <div class="svc-counter"><em id="count-val">1</em> / 8</div>
+  </div>
+
+  <div class="svc-list" id="svc-list"></div>
+
+</div>
+<script>
+var SERVICES = [
+  {
+    name: 'Русификация Lexus / Toyota',
+    desc: 'Перевод интерфейса мультимедийной системы на русский язык для автомобилей с зарубежных рынков: 🇰🇷 Корея, 🇯🇵 Япония, 🇨🇳 Китай, 🇦🇪 ОАЭ, 🇺🇸 США.',
+    img: 'assets/svc-1.jpg', url: '#service-1'
+  },
+  {
+    name: 'Ремонт мультимедиа Lexus / Toyota',
+    desc: 'Комплексное восстановление мультимедийных систем: устраняем неполадки и возвращаем комфорт в каждую поездку.',
+    img: 'assets/svc-2.jpg', url: '#service-2'
+  },
+  {
+    name: 'Установка противоугонного комплекса',
+    desc: 'Профессиональный монтаж сертифицированных систем без нарушения штатной электрики. Максимальная безопасность, сохранение гарантии и спокойствие каждый день.',
+    img: 'assets/svc-3.jpg', url: '#service-3'
+  },
+  {
+    name: 'Шумоизоляция автомобиля',
+    desc: 'Снижаем шум и вибрации с помощью многослойных вибро‑ и шумоизоляционных материалов. Тише, теплее и комфортнее в любом режиме движения.',
+    img: 'assets/svc-4.jpg', url: '#service-4'
+  },
+  {
+    name: 'Компьютерная диагностика',
+    desc: 'Полная компьютерная проверка всех электронных систем с чтением ошибок и рекомендациями по ремонту.',
+    img: 'assets/svc-5.jpg', url: '#service-5'
+  },
+  {
+    name: 'Чип-тюнинг',
+    desc: 'Оптимизируем параметры с помощью уникального ПО — для динамичных поездок и заметной экономии топлива.',
+    img: 'assets/svc-6.jpg', url: '#service-6'
+  },
+  {
+    name: 'Установка Android систем',
+    desc: 'Профессиональная интеграция Android‑мультимедиа в штатную систему с сохранением всех заводских функций и гарантией работы.',
+    img: 'assets/svc-7.jpg', url: '#service-7'
+  },
+  {
+    name: 'Активация CarPlay',
+    desc: 'Удобное беспроводное подключение смартфона — все функции CarPlay на экране вашего автомобиля.',
+    img: 'assets/svc-8.jpg', url: '#service-8'
+  }
+];
+
+var current = 0;
+var countEl = document.getElementById('count-val');
+var list    = document.getElementById('svc-list');
+
+(function buildList() {
+  SERVICES.forEach(function(svc, i) {
+    var item = document.createElement('div');
+    item.className = 'svc-item' + (i === 0 ? ' active' : '');
+
+    item.innerHTML =
+      '<div class="svc-row">' +
+        '<span class="svc-name">' + svc.name + '</span>' +
+        '<svg class="svc-chevron" viewBox="0 0 24 24" fill="none">' +
+          '<path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>' +
+      '</div>' +
+      '<div class="svc-body"><div class="svc-body-inner">' +
+        '<div class="svc-img-wrap">' +
+          '<img class="svc-img"' +
+               ' src="' + svc.img + '"' +
+               ' alt="' + svc.name + '"' +
+               (i === 0 ? ' loading="eager"' : ' loading="lazy"') +
+          '>' +
+        '</div>' +
+        '<p class="svc-desc">' + svc.desc + '</p>' +
+        '<div class="svc-footer">' +
+          '<a class="svc-btn" href="' + svc.url + '">' +
+            'Подробнее' +
+            '<svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg>' +
+          '</a>' +
+        '</div>' +
+      '</div></div>';
+
+    list.appendChild(item);
+  });
+})();
+
+function activate(idx) {
+  var items = list.querySelectorAll('.svc-item');
+  items[current].classList.remove('active');
+  items[idx].classList.add('active');
+  current = idx;
+  countEl.textContent = idx + 1;
+}
+
+list.addEventListener('click', function(e) {
+  // Let button clicks pass through
+  if (e.target.closest('.svc-btn')) return;
+
+  var row = e.target.closest('.svc-row');
+  if (!row) return;
+
+  var item  = row.parentElement;
+  var items = Array.from(list.querySelectorAll('.svc-item'));
+  var idx   = items.indexOf(item);
+  if (idx < 0 || idx === current) return;
+
+  activate(idx);
+
+  // Soft scroll: nudge the newly opened item into view after expand starts
+  setTimeout(function() {
+    item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 60);
+});
+</script>
+</body>
+</html>
