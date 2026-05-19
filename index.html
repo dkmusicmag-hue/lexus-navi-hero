@@ -30,24 +30,13 @@
     /* ──────────────────────────────
        VIDEO
     ────────────────────────────── */
-    .video-wrapper {
+    .hero-video {
       position: absolute;
-      inset: 0;
+      top: 0; left: 0;
       width: 1920px; height: 1080px;
+      object-fit: cover;
       opacity: 0;
       animation: anim-fade-in 1.5s ease 0.3s forwards;
-    }
-    .video-wrapper video {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-    }
-    /* Placeholder shown when no video source is set */
-    .video-placeholder {
-      position: absolute; inset: 0;
-      background:
-        radial-gradient(ellipse 75% 55% at 62% 52%,
-          #0d1d2e 0%, #07111c 40%, #020609 70%, #000 100%);
     }
 
     /* ──────────────────────────────
@@ -269,12 +258,9 @@
 <div class="scene" id="scene">
 
   <!-- ── VIDEO BACKGROUND ── -->
-  <div class="video-wrapper">
-    <div class="video-placeholder"></div>
-    <video autoplay muted loop playsinline>
-      <source src="assets/hero-video.mp4" type="video/mp4">
-    </video>
-  </div>
+  <video class="hero-video" autoplay muted loop playsinline>
+    <source src="assets/hero-video.mp4" type="video/mp4">
+  </video>
 
   <!-- ── BOTTOM GRADIENT ── -->
   <div class="darker"></div>
