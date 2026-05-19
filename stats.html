@@ -55,7 +55,7 @@
       overflow: hidden;
       z-index: 2;
       opacity: 0;
-      animation: fade-in 0.7s ease 0.1s forwards;
+      animation: fade-in 0.7s ease 0.25s forwards;
     }
     .card-img img {
       display: block;
@@ -196,7 +196,7 @@
     'для задач, от которых обычно отказывается дилер: язык, навигация и прошивки под любой рынок — ',
     'с гарантией качества.'
   ];
-  var SPEED = 5; // ms per character
+  var SPEED = 9; // ms per character
 
   var el     = document.getElementById('card-title');
   var lineIdx = 0;
@@ -220,11 +220,11 @@
     } else if (lineIdx < LINES.length - 1) {
       lineIdx++;
       charIdx = 0;
-      setTimeout(tick, 80); // brief pause between lines
+      setTimeout(tick, SPEED);
     }
   }
 
-  setTimeout(tick, 900); // starts after image fades in
+  setTimeout(tick, 250); // same start as image
 })();
 
 // ── Stats: fade-up + count-up ──
@@ -239,9 +239,9 @@
     { id: 2, target: 100,  suffix: '%', format: function(n) { return n + '%'; } }
   ];
 
-  var STAGGER   = 220; // ms between items
-  var COUNT_DUR = 900; // ms for count-up
-  var DELAY     = 1200; // ms after page load before first item appears
+  var STAGGER   = 220;  // ms between items
+  var COUNT_DUR = 2000; // ms for count-up
+  var DELAY     = 250;  // same start as typewriter
 
   function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 
