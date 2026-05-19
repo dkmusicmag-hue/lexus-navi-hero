@@ -93,16 +93,7 @@
       position: relative;
       animation: draw-line 0.75s cubic-bezier(0.4,0,0.2,1) forwards;
     }
-    /* Active top-divider: brighter + half-width accent line */
-    .svc-item.active .svc-divider.top-div {
-      background: rgba(255,255,255,0.35);
-    }
-    .svc-item.active .svc-divider.top-div::after {
-      content: '';
-      position: absolute; left: 0; top: 0;
-      width: 50%; height: 1px;
-      background: rgba(255,255,255,0.7);
-    }
+    /* Active top-divider: same dark line, blue progress bar is the indicator */
 
     /* ── Progress bar (auto-timer indicator) ── */
     .svc-progress {
@@ -361,38 +352,38 @@ var bgB       = document.getElementById('bg-b');
 var bgBlack   = document.getElementById('bg-black');
 var activeBg  = 'a';
 var counterEl = document.getElementById('counter-val');
-var transitioning = false;
 
 // ─────────────────────────────────────────────
 // Image crossfade through black
 // ─────────────────────────────────────────────
 function switchBg(src) {
-  if (transitioning) return;
-  transitioning = true;
+  // If already fading, abort old transition and start fresh
+  clearTimeout(switchBg._t1);
+  clearTimeout(switchBg._t2);
+  clearTimeout(switchBg._t3);
 
-  // Fade to black
-  bgBlack.style.transition = 'opacity 0.22s ease';
+  var next = activeBg === 'a' ? bgB : bgA;
+  var curr = activeBg === 'a' ? bgA : bgB;
+
+  // Preload into the hidden layer immediately
+  next.src = src;
+
+  // Fade current to black (160ms)
+  bgBlack.style.transition = 'opacity 0.16s ease-in';
   bgBlack.style.opacity    = '1';
 
-  setTimeout(function() {
-    // Load new image on the hidden layer
-    var next = activeBg === 'a' ? bgB : bgA;
-    var curr = activeBg === 'a' ? bgA : bgB;
-    next.src = src;
+  switchBg._t1 = setTimeout(function() {
+    // Swap: show new layer, hide old
     next.classList.remove('off');
+    curr.classList.add('off');
+    activeBg = activeBg === 'a' ? 'b' : 'a';
 
-    // Fade black away after tiny buffer for image decode
-    setTimeout(function() {
-      bgBlack.style.transition = 'opacity 0.38s ease';
+    // Fade black away (240ms)
+    switchBg._t2 = setTimeout(function() {
+      bgBlack.style.transition = 'opacity 0.24s ease-out';
       bgBlack.style.opacity    = '0';
-      // Fade out old layer once black is gone
-      setTimeout(function() {
-        curr.classList.add('off');
-        activeBg = activeBg === 'a' ? 'b' : 'a';
-        transitioning = false;
-      }, 420);
-    }, 60);
-  }, 220);
+    }, 40);
+  }, 160);
 }
 
 // ─────────────────────────────────────────────
