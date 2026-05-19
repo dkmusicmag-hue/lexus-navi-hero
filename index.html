@@ -258,9 +258,7 @@
 <div class="scene" id="scene">
 
   <!-- ── VIDEO BACKGROUND ── -->
-  <video class="hero-video" autoplay muted loop playsinline>
-    <source src="assets/hero-video.mp4" type="video/mp4">
-  </video>
+  <video class="hero-video" id="hero-video" autoplay muted loop playsinline></video>
 
   <!-- ── BOTTOM GRADIENT ── -->
   <div class="darker"></div>
@@ -377,6 +375,17 @@
     }
     update();
     window.addEventListener('resize', update);
+  })();
+
+  /* ── Load video as blob (bypasses GitHub Pages range-request limitation) ── */
+  (function loadVideo() {
+    const video = document.getElementById('hero-video');
+    fetch('assets/hero-video.mp4')
+      .then(function(r) { return r.blob(); })
+      .then(function(blob) {
+        video.src = URL.createObjectURL(blob);
+        video.play();
+      });
   })();
 
   /* ── Animate dots gradient origin ──
