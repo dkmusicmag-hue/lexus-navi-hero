@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lexus-Navi — Мы в цифрах</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;700&family=Wix+Madefor+Display:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #edf2f5; }
+
+    /* ── 1920×860 canvas ── */
+    .scene {
+      position: absolute; top: 0; left: 0;
+      width: 1920px; height: 860px;
+      transform-origin: top left;
+      background: #edf2f5; overflow: hidden;
+    }
+
+    /* ── Dark container ── */
+    .card {
+      position: absolute;
+      left: 80px; top: 100px;
+      width: 1760px; height: 660px;
+      background: #000;
+      border-radius: 32px;
+      overflow: hidden;
+    }
+
+    /* ── Dots (animated SVG) ── */
+    .dots-wrap {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 0;
+    }
+    .dots-wrap svg { display: block; width: 100%; height: 100%; }
+
+    /* ── Title ── */
+    .card-title {
+      position: absolute; left: 48px; top: 40px;
+      width: 1074px;
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: 40px; font-weight: 400;
+      line-height: 1.2; letter-spacing: -0.4px;
+      color: #fff;
+      z-index: 2;
+    }
+    /* blinking cursor */
+    .card-title .cursor {
+      display: inline-block;
+      width: 2px; height: 0.78em;
+      background: #fff;
+      margin-left: 2px;
+      vertical-align: middle;
+      animation: blink 0.75s step-end infinite;
+    }
+
+    /* ── Car image ── */
+    .card-img {
+      position: absolute; left: 1184px; top: 40px;
+      width: 528px; height: 580px;
+      border-radius: 16px;
+      overflow: hidden;
+      z-index: 2;
+    }
+    .card-img img {
+      display: block;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: 50% 55%;
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      position: absolute; left: 48px; top: 480px;
+      display: flex; gap: 72px; align-items: flex-start;
+      z-index: 2;
+    }
+    .stat-item {
+      display: flex; flex-direction: column; gap: 8px;
+      opacity: 0; transform: translateY(28px);
+    }
+    .stat-item.visible {
+      animation: fade-up 0.55s cubic-bezier(0.4,0,0.2,1) forwards;
+    }
+    .stat-num {
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: 96px; font-weight: 500;
+      line-height: 1; letter-spacing: -1.92px;
+      color: #fff; white-space: nowrap;
+    }
+    .stat-label {
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 20px; font-weight: 400;
+      line-height: 1.4;
+      color: rgba(255,255,255,0.7);
+      white-space: nowrap;
+    }
+
+    /* ── Keyframes ── */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="scene" id="scene">
+
+  <div class="card" id="card">
+
+    <!-- Dots -->
+    <div class="dots-wrap">
+      <svg id="dotsSvg" viewBox="0 0 1760 660" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="dg" cx="880" cy="400" r="520" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#fff" stop-opacity="0.55"/>
+            <stop offset="35%"  stop-color="#fff" stop-opacity="0.22"/>
+            <stop offset="70%"  stop-color="#fff" stop-opacity="0.04"/>
+            <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+          </radialGradient>
+          <pattern id="dp" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
+            <circle cx="14" cy="14" r="1.5" fill="white"/>
+          </pattern>
+          <mask id="dm">
+            <rect width="1760" height="660" fill="url(#dg)"/>
+          </mask>
+        </defs>
+        <rect width="1760" height="660" fill="url(#dp)" mask="url(#dm)"/>
+      </svg>
+    </div>
+
+    <!-- Title (filled by typewriter JS) -->
+    <div class="card-title" id="card-title"></div>
+
+    <!-- Car image -->
+    <div class="card-img">
+      <img src="assets/stats-car.jpg" alt="Lexus мультимедиа">
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-item" id="stat-0">
+        <div class="stat-num" id="num-0">0</div>
+        <div class="stat-label">выполненных работ</div>
+      </div>
+      <div class="stat-item" id="stat-1">
+        <div class="stat-num" id="num-1">0</div>
+        <div class="stat-label">лет на рынке</div>
+      </div>
+      <div class="stat-item" id="stat-2">
+        <div class="stat-num" id="num-2">0</div>
+        <div class="stat-label">гарантия качества</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+<script>
+// ── Scale scene ──
+(function() {
+  var scene = document.getElementById('scene');
+  function resize() {
+    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 860);
+    scene.style.transform = 'scale(' + s + ')';
+    scene.style.left = ((window.innerWidth  - 1920 * s) / 2) + 'px';
+    scene.style.top  = ((window.innerHeight -  860 * s) / 2) + 'px';
+  }
+  resize();
+  window.addEventListener('resize', resize);
+})();
+
+// ── Dots animation ──
+(function() {
+  var g  = document.getElementById('dg');
+  var bx = 880, by = 400;
+  var ax = 1760 * 0.09;
+  var ay =  660 * 0.09;
+  var t0 = null;
+  function frame(ts) {
+    if (!t0) t0 = ts;
+    var t = (ts - t0) * 0.001;
+    var x = bx + ax * (0.55 * Math.sin(t * 0.62)       + 0.45 * Math.sin(t * 1.08 + 1.9));
+    var y = by + ay * (0.55 * Math.cos(t * 0.47 + 0.7) + 0.45 * Math.cos(t * 0.81 + 2.8));
+    g.setAttribute('cx', x.toFixed(2));
+    g.setAttribute('cy', y.toFixed(2));
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+// ── Typewriter title ──
+(function() {
+  var LINES = [
+    'Мы не универсальный сервис — работаем только ',
+    'с Lexus и Toyota. За 12 лет мы отточили решения ',
+    'для задач, от которых обычно отказывается дилер: язык, навигация и прошивки под любой рынок — ',
+    'с гарантией качества.'
+  ];
+  var SPEED = 11; // ms per character — довольно быстро
+
+  var el     = document.getElementById('card-title');
+  var lineIdx = 0;
+  var charIdx = 0;
+  var cursor  = document.createElement('span');
+  cursor.className = 'cursor';
+
+  // Build output nodes — one <span> per line, separated by <br>
+  var spans = LINES.map(function() {
+    var s = document.createElement('span');
+    return s;
+  });
+  spans.forEach(function(s, i) {
+    el.appendChild(s);
+    if (i < spans.length - 1) el.appendChild(document.createElement('br'));
+  });
+  el.appendChild(cursor);
+
+  function tick() {
+    var line = LINES[lineIdx];
+    charIdx++;
+    spans[lineIdx].textContent = line.slice(0, charIdx);
+
+    if (charIdx < line.length) {
+      setTimeout(tick, SPEED);
+    } else if (lineIdx < LINES.length - 1) {
+      lineIdx++;
+      charIdx = 0;
+      setTimeout(tick, 80); // brief pause between lines
+    } else {
+      // done — remove cursor after brief hold
+      setTimeout(function() { cursor.style.display = 'none'; }, 1200);
+    }
+  }
+
+  setTimeout(tick, 300); // small delay before typing starts
+})();
+
+// ── Stats: fade-up + count-up ──
+(function() {
+  var STATS = [
+    { id: 0, target: 3000, suffix: '+', format: function(n) {
+        return n >= 1000
+          ? Math.floor(n / 1000) + ' ' + String(n % 1000).padStart(3, '0') + '+'
+          : n + '+';
+    }},
+    { id: 1, target: 12,   suffix: '+', format: function(n) { return n + '+'; } },
+    { id: 2, target: 100,  suffix: '%', format: function(n) { return n + '%'; } }
+  ];
+
+  var STAGGER   = 220; // ms between items
+  var COUNT_DUR = 900; // ms for count-up
+  var DELAY     = 1900; // ms after page load before first item appears
+
+  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+  function countUp(el, target, format, duration) {
+    var start = performance.now();
+    function step(now) {
+      var t = Math.min((now - start) / duration, 1);
+      el.textContent = format(Math.round(easeOut(t) * target));
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  STATS.forEach(function(s, i) {
+    setTimeout(function() {
+      var item   = document.getElementById('stat-' + s.id);
+      var numEl  = document.getElementById('num-'  + s.id);
+      item.classList.add('visible');
+      countUp(numEl, s.target, s.format, COUNT_DUR);
+    }, DELAY + i * STAGGER);
+  });
+})();
+</script>
+</body>
+</html>
