@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lexus-Navi — Русификация и обновление навигации</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin&family=Wix+Madefor+Display:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    /* ── Fixed 1920×1080 canvas, scaled to viewport ── */
+    .scene {
+      position: absolute;
+      top: 0; left: 0;
+      width: 1920px;
+      height: 1080px;
+      transform-origin: top left;
+      background: #000;
+      overflow: hidden;
+    }
+
+    /* ──────────────────────────────
+       VIDEO
+    ────────────────────────────── */
+    .video-wrapper {
+      position: absolute;
+      inset: 0;
+      width: 1920px; height: 1080px;
+      opacity: 0;
+      animation: anim-fade-in 1.5s ease 0.3s forwards;
+    }
+    .video-wrapper video {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    /* Placeholder shown when no video source is set */
+    .video-placeholder {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 75% 55% at 62% 52%,
+          #0d1d2e 0%, #07111c 40%, #020609 70%, #000 100%);
+    }
+
+    /* ──────────────────────────────
+       BOTTOM FADE OVERLAY
+    ────────────────────────────── */
+    .darker {
+      position: absolute;
+      left: 0; right: 0; bottom: -3px;
+      height: 564px;
+      background: linear-gradient(to top, #000 62.234%, transparent 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ──────────────────────────────
+       DOTS PATTERNS
+    ────────────────────────────── */
+    .dots {
+      position: absolute;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .dots-1 {
+      top: 93px; right: 0;
+      width: 578px; height: 440px;
+    }
+    .dots-2 {
+      bottom: 167px; left: 0;
+      width: 578px; height: 440px;
+    }
+    .dots svg {
+      display: block;
+      width: 100%; height: 100%;
+    }
+
+    /* ──────────────────────────────
+       HEADER  — slides in from top
+    ────────────────────────────── */
+    .header {
+      position: absolute;
+      top: 0; left: 0;
+      width: 1920px; height: 83px;
+      z-index: 10;
+      transform: translateY(-100%);
+      animation: anim-slide-down 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+
+    .header-logo {
+      position: absolute;
+      left: 80px; top: 13px;
+      width: 158.667px; height: 56px;
+    }
+    .header-logo img {
+      display: block; width: 100%; height: 100%; object-fit: contain;
+    }
+
+    .header-nav {
+      position: absolute;
+      left: 314.66px; top: 29px;
+      display: flex; gap: 56px; align-items: center;
+    }
+    .nav-item {
+      display: flex; gap: 8px; align-items: center;
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 20px; line-height: 1.4; color: #fff;
+      white-space: nowrap; cursor: pointer;
+    }
+    .nav-item .chevron {
+      width: 24px; height: 24px; flex-shrink: 0;
+    }
+    .nav-item .chevron img { width: 100%; height: 100%; display: block; }
+
+    .header-right {
+      position: absolute;
+      left: 1246px; top: 50%;
+      transform: translateY(-50%);
+      display: flex; gap: 48px; align-items: center;
+    }
+
+    .search-box {
+      display: flex; gap: 8px; align-items: center;
+      border: 1px solid rgba(21,160,253,0.6);
+      border-radius: 60px;
+      padding: 12px 8px 12px 16px;
+      width: 122px; height: 48px;
+      overflow: hidden;
+    }
+    .search-box .icon { width: 24px; height: 24px; flex-shrink: 0; }
+    .search-box .icon img { width: 100%; height: 100%; display: block; }
+    .search-box span {
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 16px; line-height: 1.4;
+      color: rgba(21,160,253,0.7); white-space: nowrap;
+    }
+
+    .phone-row {
+      display: flex; gap: 10px; align-items: center;
+    }
+    .phone-row .icon { width: 24px; height: 24px; flex-shrink: 0; }
+    .phone-row .icon img { width: 100%; height: 100%; display: block; }
+    .phone-row span {
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 20px; line-height: 1.4; color: #fff; white-space: nowrap;
+    }
+
+    .btn-header {
+      background: #15a0fd; border: none; cursor: pointer;
+      border-radius: 68px;
+      padding: 14px 32px;
+      height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 18px; font-weight: 600;
+      color: #000; letter-spacing: -0.36px; white-space: nowrap;
+    }
+
+    .header-line {
+      position: absolute;
+      left: 0; bottom: 0;
+      width: 1920px; height: 1px;
+      background: rgba(255,255,255,0.18);
+    }
+
+    /* ──────────────────────────────
+       TEXT SECTION
+    ────────────────────────────── */
+    .text-section {
+      position: absolute;
+      left: 80px; top: 635px;
+      width: 1760px;
+      display: flex; flex-direction: column;
+      gap: 47px;
+      z-index: 5;
+    }
+
+    /* Heading — fade in + up */
+    .heading {
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: 76px; font-weight: 400;
+      line-height: 1.1; letter-spacing: -0.76px;
+      color: #fff;
+      width: 1163px;
+      opacity: 0;
+      transform: translateY(32px);
+      animation: anim-fade-up 0.85s ease 1.0s forwards;
+    }
+
+    .content-bottom {
+      display: flex; flex-direction: column; gap: 40px;
+    }
+
+    /* Divider — draws left → right */
+    .divider {
+      height: 1px;
+      background: rgba(255,255,255,0.22);
+      transform-origin: left center;
+      transform: scaleX(0);
+      animation: anim-draw-line 1.05s cubic-bezier(0.4, 0, 0.2, 1) 1.85s forwards;
+    }
+
+    /* Caption + button — fade in + up */
+    .caption-button {
+      display: flex; align-items: center; justify-content: space-between;
+      opacity: 0;
+      transform: translateY(22px);
+      animation: anim-fade-up 0.75s ease 2.35s forwards;
+    }
+
+    .caption {
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 20px; font-weight: 400;
+      line-height: 1.4;
+      color: rgba(255,255,255,0.7);
+      width: 650px;
+    }
+    .caption .highlight { color: #fff; }
+
+    .btn-cta {
+      background: #15a0fd; border: none; cursor: pointer;
+      border-radius: 77px;
+      padding: 24px 32px;
+      height: 72px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 18px; font-weight: 600;
+      color: #000; letter-spacing: -0.36px;
+      white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* ──────────────────────────────
+       KEYFRAMES
+    ────────────────────────────── */
+    @keyframes anim-slide-down {
+      from { transform: translateY(-100%); }
+      to   { transform: translateY(0); }
+    }
+
+    @keyframes anim-fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes anim-fade-up {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes anim-draw-line {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+
+  <!-- ── VIDEO BACKGROUND ── -->
+  <div class="video-wrapper">
+    <div class="video-placeholder"></div>
+    <video autoplay muted loop playsinline>
+      <!-- Replace with your actual video: -->
+      <!-- <source src="assets/hero-video.mp4" type="video/mp4"> -->
+    </video>
+  </div>
+
+  <!-- ── BOTTOM GRADIENT ── -->
+  <div class="darker"></div>
+
+  <!-- ── DOTS PATTERN 1 (top-right) ── -->
+  <div class="dots dots-1">
+    <svg id="dots-svg-1" viewBox="0 0 578 440" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="dotGrad1" cx="162" cy="97" r="210"
+          gradientUnits="userSpaceOnUse">
+          <stop offset="0%"   stop-color="#fff" stop-opacity="0.65"/>
+          <stop offset="30%"  stop-color="#fff" stop-opacity="0.28"/>
+          <stop offset="65%"  stop-color="#fff" stop-opacity="0.05"/>
+          <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+        </radialGradient>
+        <pattern id="dotPat1" x="0" y="0" width="28" height="28"
+          patternUnits="userSpaceOnUse">
+          <circle cx="14" cy="14" r="1.6" fill="white"/>
+        </pattern>
+        <mask id="dotMask1">
+          <rect width="578" height="440" fill="url(#dotGrad1)"/>
+        </mask>
+      </defs>
+      <rect width="578" height="440" fill="url(#dotPat1)" mask="url(#dotMask1)"/>
+    </svg>
+  </div>
+
+  <!-- ── DOTS PATTERN 2 (bottom-left) ── -->
+  <div class="dots dots-2">
+    <svg id="dots-svg-2" viewBox="0 0 578 440" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="dotGrad2" cx="358" cy="185" r="195"
+          gradientUnits="userSpaceOnUse">
+          <stop offset="0%"   stop-color="#fff" stop-opacity="0.65"/>
+          <stop offset="30%"  stop-color="#fff" stop-opacity="0.28"/>
+          <stop offset="65%"  stop-color="#fff" stop-opacity="0.05"/>
+          <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+        </radialGradient>
+        <pattern id="dotPat2" x="0" y="0" width="28" height="28"
+          patternUnits="userSpaceOnUse">
+          <circle cx="14" cy="14" r="1.6" fill="white"/>
+        </pattern>
+        <mask id="dotMask2">
+          <rect width="578" height="440" fill="url(#dotGrad2)"/>
+        </mask>
+      </defs>
+      <rect width="578" height="440" fill="url(#dotPat2)" mask="url(#dotMask2)"/>
+    </svg>
+  </div>
+
+  <!-- ── HEADER ── -->
+  <header class="header">
+    <!-- Logo -->
+    <div class="header-logo">
+      <img src="assets/logo.svg" alt="Lexus-Navi">
+    </div>
+
+    <!-- Navigation -->
+    <nav class="header-nav">
+      <div class="nav-item">
+        <span>Услуги</span>
+        <div class="chevron"><img src="assets/chevron-down.svg" alt=""></div>
+      </div>
+      <div class="nav-item">Подбор по авто</div>
+      <div class="nav-item">Контакты</div>
+    </nav>
+
+    <!-- Right: search / phone / CTA -->
+    <div class="header-right">
+      <div class="search-box">
+        <div class="icon"><img src="assets/search.svg" alt=""></div>
+        <span>Поиск</span>
+      </div>
+      <div class="phone-row">
+        <div class="icon"><img src="assets/calling.svg" alt=""></div>
+        <span>+7 (495) 150-60-70</span>
+      </div>
+      <button class="btn-header">Записаться</button>
+    </div>
+
+    <div class="header-line"></div>
+  </header>
+
+  <!-- ── TEXT SECTION ── -->
+  <div class="text-section">
+    <h1 class="heading">
+      Русификация и обновление навигации для Lexus и Toyota
+    </h1>
+    <div class="content-bottom">
+      <div class="divider"></div>
+      <div class="caption-button">
+        <p class="caption">
+          Профессиональная установка мультимедийных систем с полной русификацией
+          интерфейса и актуальными картами навигации<br>
+          для автомобилей из <span class="highlight">Кореи, Китая, ОАЭ, Японии и США</span>.
+        </p>
+        <button class="btn-cta">Подобрать по авто</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /scene -->
+
+<script>
+  /* ── Scale scene to fit viewport ── */
+  (function scaleScene() {
+    const scene = document.getElementById('scene');
+    function update() {
+      const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+      const w = 1920 * s, h = 1080 * s;
+      scene.style.transform = `scale(${s})`;
+      scene.style.left = ((window.innerWidth  - w) / 2) + 'px';
+      scene.style.top  = ((window.innerHeight - h) / 2) + 'px';
+    }
+    update();
+    window.addEventListener('resize', update);
+  })();
+
+  /* ── Animate dots gradient origin ──
+     Each shape has an independent oscillation path (Lissajous-like).
+     Amplitude: ±12–13 % of shape dimensions (578×440).
+  ── */
+  (function animateDots() {
+    const g1 = document.getElementById('dotGrad1');
+    const g2 = document.getElementById('dotGrad2');
+
+    /* Base positions (px in userSpaceOnUse) */
+    const b1 = { x: 162, y: 97  };   /* dots-1 upper-left cluster */
+    const b2 = { x: 358, y: 185 };   /* dots-2 centre-right cluster */
+
+    /* Amplitude: 12 % of shape width (578) and height (440) */
+    const ax = 578 * 0.12;  /* ≈ 69 px */
+    const ay = 440 * 0.12;  /* ≈ 53 px */
+
+    let t0 = null;
+
+    function frame(ts) {
+      if (!t0) t0 = ts;
+      const t = (ts - t0) * 0.001; /* seconds */
+
+      /* Dots-1: angular frequencies chosen so X and Y cycles differ,
+         creating a non-repeating path within each "slow" cycle. */
+      const x1 = b1.x + ax * Math.sin(t * 0.38);
+      const y1 = b1.y + ay * Math.cos(t * 0.27 + 1.4);
+      g1.setAttribute('cx', x1.toFixed(2));
+      g1.setAttribute('cy', y1.toFixed(2));
+
+      /* Dots-2: completely different phase and frequency → no sync */
+      const x2 = b2.x + ax * Math.cos(t * 0.31 + 2.6);
+      const y2 = b2.y + ay * Math.sin(t * 0.43 + 0.7);
+      g2.setAttribute('cx', x2.toFixed(2));
+      g2.setAttribute('cy', y2.toFixed(2));
+
+      requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
+  })();
+</script>
+</body>
+</html>
