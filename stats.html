@@ -54,6 +54,8 @@
       border-radius: 16px;
       overflow: hidden;
       z-index: 2;
+      opacity: 0;
+      animation: fade-in 0.7s ease 0.1s forwards;
     }
     .card-img img {
       display: block;
@@ -90,6 +92,10 @@
     }
 
     /* ── Keyframes ── */
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
     @keyframes fade-up {
       from { opacity: 0; transform: translateY(28px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -218,7 +224,7 @@
     }
   }
 
-  setTimeout(tick, 300); // small delay before typing starts
+  setTimeout(tick, 900); // starts after image fades in
 })();
 
 // ── Stats: fade-up + count-up ──
