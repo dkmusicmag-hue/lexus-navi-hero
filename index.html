@@ -415,14 +415,14 @@
 
       /* Dots-1: angular frequencies chosen so X and Y cycles differ,
          creating a non-repeating path within each "slow" cycle. */
-      const x1 = b1.x + ax * Math.sin(t * 0.38);
-      const y1 = b1.y + ay * Math.cos(t * 0.27 + 1.4);
+      const x1 = b1.x + ax * Math.sin(t * 0.62);
+      const y1 = b1.y + ay * Math.cos(t * 0.44 + 1.4);
       g1.setAttribute('cx', x1.toFixed(2));
       g1.setAttribute('cy', y1.toFixed(2));
 
       /* Dots-2: completely different phase and frequency → no sync */
-      const x2 = b2.x + ax * Math.cos(t * 0.31 + 2.6);
-      const y2 = b2.y + ay * Math.sin(t * 0.43 + 0.7);
+      const x2 = b2.x + ax * Math.cos(t * 0.50 + 2.6);
+      const y2 = b2.y + ay * Math.sin(t * 0.70 + 0.7);
       g2.setAttribute('cx', x2.toFixed(2));
       g2.setAttribute('cy', y2.toFixed(2));
 
