@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lexus-Navi — Услуги по мультимедиа</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;700&family=Wix+Madefor+Display:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+
+    /* ── 1920×1080 canvas ── */
+    .scene {
+      position: absolute; top: 0; left: 0;
+      width: 1920px; height: 1080px;
+      transform-origin: top left;
+      background: #000; overflow: hidden;
+    }
+
+    /* ── Background image ── */
+    .bg-img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    /* ── Gradient overlays ── */
+    .overlay-top {
+      position: absolute; left: 0; right: 0; top: 0;
+      height: 671px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.52) 45%, transparent 100%);
+      z-index: 1; pointer-events: none;
+    }
+    .overlay-bottom {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      height: 400px;
+      background: linear-gradient(to top, #000 0%, transparent 100%);
+      z-index: 1; pointer-events: none;
+    }
+
+    /* ── Dots ── */
+    .dots { position: absolute; pointer-events: none; z-index: 2; }
+    .dots-1 { top: 93px; right: 0; width: 578px; height: 440px; }
+    .dots-2 { top: 465px; left: 0; width: 578px; height: 440px; }
+    .dots svg { display: block; width: 100%; height: 100%; }
+
+    /* ── Header ── */
+    .header {
+      position: absolute; top: 0; left: 0;
+      width: 1920px; height: 83px;
+      z-index: 10;
+      transform: translateY(-100%);
+      animation: slide-down 0.7s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+    }
+    .header-logo {
+      position: absolute; left: 80px; top: 13px;
+      width: 158.667px; height: 56px;
+    }
+    .header-logo img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .header-nav {
+      position: absolute; left: 315px; top: 29px;
+      display: flex; gap: 56px; align-items: center;
+    }
+    .nav-item {
+      display: flex; gap: 8px; align-items: center;
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 20px; line-height: 1.4; color: #fff;
+      white-space: nowrap; cursor: pointer;
+    }
+    .nav-chevron { width: 24px; height: 24px; flex-shrink: 0; }
+    .nav-chevron img { width: 100%; height: 100%; display: block; }
+    .nav-active-bar {
+      position: absolute; left: 315px; bottom: 0;
+      width: 99px; height: 4px; background: #15a0fd;
+    }
+    .header-right {
+      position: absolute; left: 1246px; top: 50%;
+      transform: translateY(-50%);
+      display: flex; gap: 48px; align-items: center;
+    }
+    .search-box {
+      display: flex; gap: 8px; align-items: center;
+      border: 1px solid rgba(21,160,253,0.6); border-radius: 60px;
+      padding: 12px 8px 12px 16px; width: 122px; height: 48px; overflow: hidden;
+    }
+    .search-box .icon { width: 24px; height: 24px; flex-shrink: 0; }
+    .search-box .icon img { width: 100%; height: 100%; display: block; }
+    .search-box span {
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 16px; line-height: 1.4; color: rgba(21,160,253,0.7); white-space: nowrap;
+    }
+    .phone-row { display: flex; gap: 10px; align-items: center; }
+    .phone-row .icon { width: 24px; height: 24px; flex-shrink: 0; }
+    .phone-row .icon img { width: 100%; height: 100%; display: block; }
+    .phone-row span {
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 20px; line-height: 1.4; color: #fff; white-space: nowrap;
+    }
+    .btn-header {
+      background: #15a0fd; border: none; cursor: pointer;
+      border-radius: 68px; padding: 14px 32px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 18px; font-weight: 600;
+      color: #000; letter-spacing: -0.36px; white-space: nowrap;
+    }
+    .header-line {
+      position: absolute; left: 0; bottom: 0;
+      width: 1920px; height: 1px;
+      background: rgba(255,255,255,0.18);
+      transform-origin: left center; transform: scaleX(0);
+      animation: draw-line 0.75s cubic-bezier(0.4,0,0.2,1) 0.7s forwards;
+    }
+
+    /* ── Breadcrumb ── */
+    .breadcrumb {
+      position: absolute; left: 80px; top: 131px;
+      display: flex; gap: 8px; align-items: center;
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 16px; line-height: 1.4; color: #fff;
+      z-index: 4;
+      opacity: 0; transform: translateY(16px);
+      animation: fade-up 0.5s ease 0.5s forwards;
+    }
+    .breadcrumb .dim { color: rgba(255,255,255,0.6); }
+
+    /* ── Title ── */
+    .page-title {
+      position: absolute; left: 80px; top: 207px;
+      width: 959px;
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: 76px; font-weight: 400;
+      line-height: 1.1; letter-spacing: -0.76px;
+      color: #fff;
+      z-index: 4;
+      opacity: 0; transform: translateY(32px);
+      animation: fade-up 0.65s ease 0.75s forwards;
+    }
+
+    /* ── Divider ── */
+    .content-divider {
+      position: absolute; left: 80px; top: 671px;
+      width: 1760px; height: 1px;
+      background: rgba(255,255,255,0.22);
+      transform-origin: left center; transform: scaleX(0);
+      z-index: 4;
+      animation: draw-line 0.75s cubic-bezier(0.4,0,0.2,1) 1.4s forwards;
+    }
+
+    /* ── Bottom row ── */
+    .bottom-row {
+      position: absolute; left: 80px; top: 703px;
+      width: 1760px;
+      display: flex; align-items: flex-start; justify-content: space-between;
+      z-index: 4;
+      opacity: 0; transform: translateY(22px);
+      animation: fade-up 0.55s ease 1.65s forwards;
+    }
+    .body-text {
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 20px; line-height: 1.4;
+      color: rgba(255,255,255,0.7);
+      width: 826px;
+    }
+
+    /* ── Language word ── */
+    .lang-wrap {
+      flex-shrink: 0;
+      cursor: default;
+      user-select: none;
+    }
+    .lang-text {
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: 48px; font-weight: 700;
+      line-height: 1.1;
+      color: #fff;
+      white-space: nowrap;
+      display: inline-block;
+      min-width: 1ch;
+      /* blinking cursor via box-shadow on a ::after wouldn't work well;
+         use border-right on the element itself */
+    }
+    .lang-text.cursor::after {
+      content: '';
+      display: inline-block;
+      width: 3px; height: 0.8em;
+      background: #fff;
+      margin-left: 3px;
+      vertical-align: middle;
+      animation: blink 0.8s step-end infinite;
+    }
+
+    /* ── Keyframes ── */
+    @keyframes slide-down {
+      from { transform: translateY(-100%); }
+      to   { transform: translateY(0); }
+    }
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes draw-line {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="scene" id="scene">
+
+  <!-- Background -->
+  <img class="bg-img" src="assets/rusification-bg.jpg" alt="">
+
+  <!-- Overlays -->
+  <div class="overlay-top"></div>
+  <div class="overlay-bottom"></div>
+
+  <!-- Dots top-right -->
+  <div class="dots dots-1">
+    <svg id="dotsSvg1" viewBox="0 0 578 440" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="dg1" cx="162" cy="97" r="210" gradientUnits="userSpaceOnUse">
+          <stop offset="0%"   stop-color="#fff" stop-opacity="0.65"/>
+          <stop offset="30%"  stop-color="#fff" stop-opacity="0.28"/>
+          <stop offset="65%"  stop-color="#fff" stop-opacity="0.05"/>
+          <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+        </radialGradient>
+        <pattern id="dp1" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
+          <circle cx="14" cy="14" r="1.6" fill="white"/>
+        </pattern>
+        <mask id="dm1"><rect width="578" height="440" fill="url(#dg1)"/></mask>
+      </defs>
+      <rect width="578" height="440" fill="url(#dp1)" mask="url(#dm1)"/>
+    </svg>
+  </div>
+
+  <!-- Dots bottom-left -->
+  <div class="dots dots-2">
+    <svg id="dotsSvg2" viewBox="0 0 578 440" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="dg2" cx="358" cy="185" r="195" gradientUnits="userSpaceOnUse">
+          <stop offset="0%"   stop-color="#fff" stop-opacity="0.65"/>
+          <stop offset="30%"  stop-color="#fff" stop-opacity="0.28"/>
+          <stop offset="65%"  stop-color="#fff" stop-opacity="0.05"/>
+          <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+        </radialGradient>
+        <pattern id="dp2" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
+          <circle cx="14" cy="14" r="1.6" fill="white"/>
+        </pattern>
+        <mask id="dm2"><rect width="578" height="440" fill="url(#dg2)"/></mask>
+      </defs>
+      <rect width="578" height="440" fill="url(#dp2)" mask="url(#dm2)"/>
+    </svg>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-logo">
+      <img src="assets/logo.svg" alt="Lexus-Navi">
+    </div>
+    <nav class="header-nav">
+      <div class="nav-item">
+        <span>Услуги</span>
+        <div class="nav-chevron"><img src="assets/chevron-down.svg" alt=""></div>
+      </div>
+      <div class="nav-item">Подбор по авто</div>
+      <div class="nav-item">Контакты</div>
+    </nav>
+    <div class="header-right">
+      <div class="search-box">
+        <div class="icon"><img src="assets/search.svg" alt=""></div>
+        <span>Поиск</span>
+      </div>
+      <div class="phone-row">
+        <div class="icon"><img src="assets/calling.svg" alt=""></div>
+        <span>+7 (495) 150-60-70</span>
+      </div>
+      <button class="btn-header">Записаться</button>
+    </div>
+    <div class="nav-active-bar"></div>
+    <div class="header-line"></div>
+  </header>
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb">
+    <span>Главная</span>
+    <span>/</span>
+    <span class="dim">Услуги</span>
+  </div>
+
+  <!-- Title -->
+  <h1 class="page-title">Делаем ваш автомобиль действительно понятным</h1>
+
+  <!-- Divider -->
+  <div class="content-divider"></div>
+
+  <!-- Bottom row -->
+  <div class="bottom-row">
+    <p class="body-text">Все услуги по мультимедиа Toyota и Lexus — в одном месте: русификация, карты
+России с пробками, локальные онлайн‑сервисы, активация нужных функций.
+Интерфейс становится понятным и удобным, а системы работают стабильно
+и сохраняют настройки после обновлений и сервиса.</p>
+    <div class="lang-wrap" id="lang-wrap">
+      <span class="lang-text" id="lang-text">中文</span>
+    </div>
+  </div>
+
+</div>
+<script>
+// ── Scale scene ──
+(function() {
+  var scene = document.getElementById('scene');
+  function resize() {
+    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    scene.style.transform = 'scale(' + s + ')';
+    scene.style.left = ((window.innerWidth  - 1920 * s) / 2) + 'px';
+    scene.style.top  = ((window.innerHeight - 1080 * s) / 2) + 'px';
+  }
+  resize();
+  window.addEventListener('resize', resize);
+})();
+
+// ── Dots animation ──
+(function() {
+  var g1 = document.getElementById('dg1');
+  var g2 = document.getElementById('dg2');
+  var b1 = { x: 162, y: 97  };
+  var b2 = { x: 358, y: 185 };
+  var ax = 578 * 0.10;
+  var ay = 440 * 0.10;
+  var t0 = null;
+  function frame(ts) {
+    if (!t0) t0 = ts;
+    var t = (ts - t0) * 0.001;
+    var x1 = b1.x + ax * (0.55 * Math.sin(t * 0.70)       + 0.45 * Math.sin(t * 1.21 + 1.7));
+    var y1 = b1.y + ay * (0.55 * Math.cos(t * 0.50 + 0.8) + 0.45 * Math.cos(t * 0.87 + 3.1));
+    g1.setAttribute('cx', x1.toFixed(2));
+    g1.setAttribute('cy', y1.toFixed(2));
+    var x2 = b2.x + ax * (0.55 * Math.cos(t * 0.57 + 2.3) + 0.45 * Math.cos(t * 0.98 + 0.4));
+    var y2 = b2.y + ay * (0.55 * Math.sin(t * 0.79 + 1.5) + 0.45 * Math.sin(t * 1.37 + 2.8));
+    g2.setAttribute('cx', x2.toFixed(2));
+    g2.setAttribute('cy', y2.toFixed(2));
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+// ── Language typewriter + hover scramble ──
+(function() {
+  var WORDS   = ['中文', '한국어', '日本語', 'العربية'];
+  var HOVER   = 'Русский';
+  var CHARS   = '!@#$%^&*<>?/|ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var HOLD    = 2600;  // ms — how long to show each word
+  var T_SPEED = 80;   // ms per char when typing
+  var D_SPEED = 55;   // ms per char when deleting
+
+  var el       = document.getElementById('lang-text');
+  var wrap     = document.getElementById('lang-wrap');
+  var wordIdx  = 0;
+  var charIdx  = WORDS[0].length; // start fully typed
+  var deleting = false;
+  var hovered  = false;
+  var timer    = null;
+
+  function setCursor(on) {
+    if (on) el.classList.add('cursor');
+    else el.classList.remove('cursor');
+  }
+
+  // ── Typewriter cycle ──
+  function tick() {
+    if (hovered) return;
+    var word = WORDS[wordIdx];
+    if (!deleting) {
+      charIdx++;
+      el.textContent = word.slice(0, charIdx);
+      if (charIdx >= word.length) {
+        deleting = true;
+        setCursor(false);
+        timer = setTimeout(tick, HOLD);
+        return;
+      }
+    } else {
+      charIdx--;
+      el.textContent = word.slice(0, charIdx);
+      if (charIdx === 0) {
+        deleting = false;
+        wordIdx = (wordIdx + 1) % WORDS.length;
+        timer = setTimeout(tick, 180);
+        return;
+      }
+    }
+    setCursor(deleting ? false : (charIdx < word.length));
+    timer = setTimeout(tick, deleting ? D_SPEED : T_SPEED);
+  }
+
+  function startCycle() {
+    clearTimeout(timer);
+    deleting = true;
+    setCursor(false);
+    timer = setTimeout(tick, HOLD);
+  }
+
+  // ── Scramble to target ──
+  function scrambleTo(target, onDone) {
+    clearTimeout(timer);
+    var len      = target.length;
+    var revealed = 0;
+    var itr      = 0;
+    var scTimer;
+
+    function step() {
+      var result = '';
+      for (var i = 0; i < len; i++) {
+        if (i < revealed) {
+          result += target[i];
+        } else {
+          result += CHARS[Math.floor(Math.random() * CHARS.length)];
+        }
+      }
+      el.textContent = result;
+      itr++;
+      if (itr % 3 === 0) revealed++;
+      if (revealed >= len) {
+        el.textContent = target;
+        if (onDone) onDone();
+        return;
+      }
+      scTimer = setTimeout(step, 42);
+    }
+
+    step();
+    return function cancel() { clearTimeout(scTimer); };
+  }
+
+  var cancelFn = null;
+
+  // ── Hover: scramble → Русский ──
+  wrap.addEventListener('mouseenter', function() {
+    hovered = true;
+    clearTimeout(timer);
+    if (cancelFn) { cancelFn(); cancelFn = null; }
+
+    // Quick erase then scramble
+    var curr = el.textContent;
+    var ei   = curr.length;
+    function erase() {
+      ei--;
+      el.textContent = curr.slice(0, ei);
+      if (ei > 0) {
+        timer = setTimeout(erase, D_SPEED);
+      } else {
+        cancelFn = scrambleTo(HOVER, null);
+      }
+    }
+    if (ei > 0) erase();
+    else cancelFn = scrambleTo(HOVER, null);
+  });
+
+  // ── Mouseleave: erase Русский, resume cycle ──
+  wrap.addEventListener('mouseleave', function() {
+    hovered = false;
+    if (cancelFn) { cancelFn(); cancelFn = null; }
+    clearTimeout(timer);
+
+    var src = HOVER;
+    var ei  = src.length;
+    function erase() {
+      ei--;
+      el.textContent = src.slice(0, ei);
+      if (ei > 0) {
+        timer = setTimeout(erase, D_SPEED);
+      } else {
+        deleting  = false;
+        charIdx   = 0;
+        timer = setTimeout(tick, 180);
+      }
+    }
+    erase();
+  });
+
+  // Start cycle after entrance animation settles
+  setTimeout(startCycle, 2200);
+})();
+</script>
+</body>
+</html>
