@@ -46,15 +46,6 @@
       color: #fff;
       z-index: 2;
     }
-    /* blinking cursor */
-    .card-title .cursor {
-      display: inline-block;
-      width: 2px; height: 0.78em;
-      background: #fff;
-      margin-left: 2px;
-      vertical-align: middle;
-      animation: blink 0.75s step-end infinite;
-    }
 
     /* ── Car image ── */
     .card-img {
@@ -102,10 +93,6 @@
     @keyframes fade-up {
       from { opacity: 0; transform: translateY(28px); }
       to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0; }
     }
   </style>
 </head>
@@ -203,24 +190,19 @@
     'для задач, от которых обычно отказывается дилер: язык, навигация и прошивки под любой рынок — ',
     'с гарантией качества.'
   ];
-  var SPEED = 11; // ms per character — довольно быстро
+  var SPEED = 5; // ms per character
 
   var el     = document.getElementById('card-title');
   var lineIdx = 0;
   var charIdx = 0;
-  var cursor  = document.createElement('span');
-  cursor.className = 'cursor';
-
   // Build output nodes — one <span> per line, separated by <br>
   var spans = LINES.map(function() {
-    var s = document.createElement('span');
-    return s;
+    return document.createElement('span');
   });
   spans.forEach(function(s, i) {
     el.appendChild(s);
     if (i < spans.length - 1) el.appendChild(document.createElement('br'));
   });
-  el.appendChild(cursor);
 
   function tick() {
     var line = LINES[lineIdx];
@@ -233,9 +215,6 @@
       lineIdx++;
       charIdx = 0;
       setTimeout(tick, 80); // brief pause between lines
-    } else {
-      // done — remove cursor after brief hold
-      setTimeout(function() { cursor.style.display = 'none'; }, 1200);
     }
   }
 
@@ -256,7 +235,7 @@
 
   var STAGGER   = 220; // ms between items
   var COUNT_DUR = 900; // ms for count-up
-  var DELAY     = 1900; // ms after page load before first item appears
+  var DELAY     = 1200; // ms after page load before first item appears
 
   function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 
