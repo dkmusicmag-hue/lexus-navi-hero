@@ -104,6 +104,16 @@
       background: rgba(255,255,255,0.7);
     }
 
+    /* ── Progress bar (auto-timer indicator) ── */
+    .svc-progress {
+      position: absolute; left: 0; top: 0;
+      height: 1px; width: 100%;
+      background: #15a0fd;
+      transform-origin: left center;
+      transform: scaleX(0);
+      z-index: 2; pointer-events: none;
+    }
+
     /* ── Item ── */
     .svc-item { position: relative; }
 
@@ -319,6 +329,7 @@ SERVICES.forEach(function(svc, i) {
   var divDelay = (0.52 + i * 0.055).toFixed(3) + 's';
 
   item.innerHTML =
+    '<div class="svc-progress"></div>' +
     '<div class="svc-divider top-div" style="animation-delay:' + divDelay + ';animation-fill-mode:forwards"></div>' +
     '<div class="svc-item-header">' +
       '<span class="svc-item-name">' + svc.name + '</span>' +
@@ -398,12 +409,45 @@ function activate(index) {
 
   // Update counter with flash
   counterEl.classList.remove('counter-flash');
-  void counterEl.offsetWidth; // reflow to restart anim
+  void counterEl.offsetWidth;
   counterEl.textContent = String(index + 1).padStart(2, '0');
   counterEl.classList.add('counter-flash');
 
-  // Image switches slightly after text collapses
-  setTimeout(function() { switchBg(SERVICES[index].img); }, 180);
+  // Start image crossfade immediately (no lag)
+  switchBg(SERVICES[index].img);
+
+  // Restart progress bar for the new item
+  startProgress(index);
+}
+
+// ─────────────────────────────────────────────
+// Progress bar control
+// ─────────────────────────────────────────────
+var TIMER_DURATION = 5000;
+
+function startProgress(index) {
+  var items = list.querySelectorAll('.svc-item');
+  // Reset all bars instantly
+  for (var i = 0; i < items.length; i++) {
+    var bar = items[i].querySelector('.svc-progress');
+    if (bar) { bar.style.transition = 'none'; bar.style.transform = 'scaleX(0)'; }
+  }
+  // Animate the active bar
+  var activeBar = items[index].querySelector('.svc-progress');
+  if (!activeBar) return;
+  activeBar.offsetWidth; // force reflow
+  activeBar.style.transition = 'transform ' + TIMER_DURATION + 'ms linear';
+  activeBar.style.transform = 'scaleX(1)';
+}
+
+function pauseProgress() {
+  var items = list.querySelectorAll('.svc-item');
+  var bar = items[current].querySelector('.svc-progress');
+  if (!bar) return;
+  // Freeze in place by reading computed value
+  var matrix = window.getComputedStyle(bar).transform;
+  bar.style.transition = 'none';
+  bar.style.transform = matrix;
 }
 
 // ─────────────────────────────────────────────
@@ -413,9 +457,11 @@ list.addEventListener('mouseover', function(e) {
   var item = e.target.closest('.svc-item');
   if (!item) return;
   var idx = parseInt(item.dataset.idx);
+  if (hovered === idx) return;
   hovered = idx;
   clearInterval(autoTimer);
   autoTimer = null;
+  pauseProgress();
   if (idx !== current) activate(idx);
 });
 
@@ -440,10 +486,11 @@ list.addEventListener('click', function(e) {
 // ─────────────────────────────────────────────
 function startTimer() {
   clearInterval(autoTimer);
+  startProgress(current);
   autoTimer = setInterval(function() {
     if (hovered !== -1) return;
     activate((current + 1) % SERVICES.length);
-  }, 5000);
+  }, TIMER_DURATION);
 }
 
 startTimer();
