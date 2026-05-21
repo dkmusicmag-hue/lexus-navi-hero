@@ -63,7 +63,7 @@
     /* ── Floating image (clay.global mechanic) ── */
     .float-img-wrap {
       position: absolute;
-      left: 484px;
+      left: 505px; /* right edge = 855px = desc start (888) − 33px */
       width: 350px;
       height: 263px;
       border-radius: 16px;
@@ -96,7 +96,7 @@
     /* ── Glow behind image (matches Figma SVG: 350×202 core, bleeds 212px) ── */
     .float-glow {
       position: absolute;
-      left: 484px;       /* same x as image */
+      left: 505px;       /* same x as image */
       width: 350px;
       height: 202px;
       pointer-events: none;
@@ -125,12 +125,12 @@
       .float-img-wrap {
         width: 260px;
         height: 195px;
-        left: 510px;
+        left: 595px; /* right edge = 855px = desc start (888) − 33px */
       }
       .float-glow {
-        width: 300px;
+        width: 260px;
         height: 190px;
-        left: 485px;
+        left: 595px;
       }
     }
 
