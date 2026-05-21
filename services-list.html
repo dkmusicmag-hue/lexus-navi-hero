@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lexus-Navi — Услуги</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;700&family=Wix+Madefor+Display:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: #000; }
+    body { background: #000; color: #fff; -webkit-font-smoothing: antialiased; }
+
+    /* ── 1920px wide canvas, width-scaled, vertically scrollable ── */
+    .scene {
+      position: relative;
+      width: 1920px;
+      transform-origin: top left;
+    }
+
+    /* Atmospheric background */
+    .scene-bg {
+      position: absolute;
+      inset: 0;
+      background: url('assets/rusification-bg.jpg') center 30% / cover no-repeat;
+      opacity: 0.18;
+      pointer-events: none;
+    }
+    .scene-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg,
+        rgba(0,0,0,0.5) 0%,
+        rgba(0,0,0,0.15) 35%,
+        rgba(0,0,0,0.6) 100%);
+      pointer-events: none;
+    }
+
+    /* ── Content layer ── */
+    .scene-content {
+      position: relative;
+      z-index: 1;
+      padding: 100px 80px 180px;
+    }
+
+    /* ── Page title ── */
+    .page-title {
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: 56px;
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: -0.56px;
+      color: #fff;
+      margin-bottom: 82px;
+    }
+
+    /* ── Services list container ── */
+    .svc-list {
+      position: relative;
+      width: 1760px;
+    }
+
+    /* ── Floating image (clay.global mechanic) ── */
+    .float-img-wrap {
+      position: absolute;
+      left: 484px;
+      width: 350px;
+      height: 263px;
+      border-radius: 16px;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.32s ease;
+      will-change: top, transform;
+    }
+    .float-img-wrap.visible {
+      opacity: 1;
+    }
+    .float-img-wrap img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: right center;
+    }
+    /* Bottom darkening gradient on image */
+    .float-img-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%);
+      pointer-events: none;
+    }
+
+    /* ── Glow behind image ── */
+    .float-glow {
+      position: absolute;
+      left: 459px;
+      width: 400px;
+      height: 250px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(21,160,253,0.38) 0%, transparent 68%);
+      filter: blur(52px);
+      pointer-events: none;
+      z-index: 9;
+      opacity: 0;
+      transition: opacity 0.32s ease;
+      will-change: top;
+    }
+    .float-glow.visible {
+      opacity: 1;
+    }
+
+    /* ── Service row ── */
+    .svc-row {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 28px 0;
+      cursor: default;
+      transition: opacity 0.28s ease;
+    }
+    /* Divider above each row */
+    .svc-row::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.12);
+    }
+    /* Divider after last row */
+    .svc-row:last-child::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.12);
+    }
+
+    /* Dim non-active rows when any is hovered */
+    .svc-list.has-active .svc-row:not(.active) {
+      opacity: 0.28;
+    }
+
+    /* ── Row name ── */
+    .svc-name {
+      width: 872px;
+      flex-shrink: 0;
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: 32px;
+      font-weight: 400;
+      line-height: 1.25;
+      letter-spacing: 0.32px;
+      color: #fff;
+      transition: color 0.28s ease;
+    }
+    .svc-row.active .svc-name {
+      color: #15a0fd;
+    }
+
+    /* ── Row description ── */
+    .svc-desc {
+      width: 724px;
+      flex-shrink: 0;
+      font-family: 'Wix Madefor Display', sans-serif;
+      font-size: 20px;
+      font-weight: 400;
+      line-height: 1.55;
+      color: rgba(255,255,255,0.5);
+      transition: color 0.28s ease;
+    }
+    .svc-row.active .svc-desc {
+      color: rgba(255,255,255,0.88);
+    }
+
+    /* ── Arrow button ── */
+    .svc-btn {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 64px;
+      height: 40px;
+      border-radius: 84px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.28s ease;
+      flex-shrink: 0;
+    }
+    .svc-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: #fff;
+      flex-shrink: 0;
+      transition: fill 0.28s ease;
+    }
+    .svc-row.active .svc-btn {
+      background: #15a0fd;
+    }
+    .svc-row.active .svc-btn svg {
+      fill: #000;
+    }
+  </style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+  <div class="scene-bg"></div>
+  <div class="scene-overlay"></div>
+
+  <div class="scene-content">
+
+    <h2 class="page-title">Услуги, которые мы оказываем</h2>
+
+    <div class="svc-list" id="svc-list">
+      <!-- Floating image layer -->
+      <div class="float-glow"     id="float-glow"></div>
+      <div class="float-img-wrap" id="float-img">
+        <img id="float-img-el" src="" alt="">
+      </div>
+      <!-- Rows injected by JS -->
+    </div>
+
+  </div>
+</div>
+
+<script>
+var SERVICES = [
+  {
+    name: 'Русификация Lexus / Toyota',
+    desc: 'Перевод интерфейса мультимедийной системы на русский язык для автомобилей с зарубежных рынков: Корея, Япония, Китай, ОАЭ, США.',
+    img: 'assets/svc-1.jpg'
+  },
+  {
+    name: 'Ремонт мультимедиа Lexus / Toyota',
+    desc: 'Комплексное восстановление мультимедийных систем: устраняем неполадки и возвращаем комфорт в каждую поездку.',
+    img: 'assets/svc-2.jpg'
+  },
+  {
+    name: 'Установка противоугонного комплекса',
+    desc: 'Профессиональный монтаж сертифицированных систем без нарушения штатной электрики. Максимальная безопасность и сохранение гарантии.',
+    img: 'assets/svc-3.jpg'
+  },
+  {
+    name: 'Шумоизоляция автомобиля',
+    desc: 'Снижаем шум и вибрации с помощью многослойных вибро‑ и шумоизоляционных материалов. Тише, теплее и комфортнее в любом режиме движения.',
+    img: 'assets/svc-4.jpg'
+  },
+  {
+    name: 'Компьютерная диагностика',
+    desc: 'Полная компьютерная проверка всех электронных систем с чтением ошибок и рекомендациями по ремонту.',
+    img: 'assets/svc-5.jpg'
+  },
+  {
+    name: 'Чип-тюнинг',
+    desc: 'Оптимизируем параметры двигателя с помощью уникального ПО — для динамичных поездок и заметной экономии топлива.',
+    img: 'assets/svc-6.jpg'
+  },
+  {
+    name: 'Установка Android систем',
+    desc: 'Профессиональная интеграция Android‑мультимедиа в штатную систему с сохранением всех заводских функций и гарантией работы.',
+    img: 'assets/svc-7.jpg'
+  },
+  {
+    name: 'Активация CarPlay',
+    desc: 'Удобное беспроводное подключение смартфона — все функции CarPlay на экране вашего автомобиля.',
+    img: 'assets/svc-8.jpg'
+  }
+];
+
+// Preload images so instant-swap has no flicker
+SERVICES.forEach(function(s) { (new Image()).src = s.img; });
+
+// ── Scene: width-only scaling (page scrolls vertically) ──
+(function () {
+  var scene = document.getElementById('scene');
+  function resize() {
+    var s = window.innerWidth / 1920;
+    scene.style.transform = 'scale(' + s + ')';
+    document.body.style.minHeight = Math.ceil(scene.offsetHeight * s) + 'px';
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  // Re-measure after fonts/images settle
+  window.addEventListener('load', resize);
+  document.fonts && document.fonts.ready && document.fonts.ready.then(resize);
+}());
+
+// ── Build rows ──
+var list    = document.getElementById('svc-list');
+var imgWrap = document.getElementById('float-img');
+var imgEl   = document.getElementById('float-img-el');
+var glow    = document.getElementById('float-glow');
+var IMG_H   = 263;
+
+SERVICES.forEach(function (svc) {
+  var row = document.createElement('div');
+  row.className = 'svc-row';
+  row.dataset.img = svc.img;
+  row.innerHTML =
+    '<span class="svc-name">' + svc.name + '</span>' +
+    '<span class="svc-desc">' + svc.desc + '</span>' +
+    '<a class="svc-btn" href="#">' +
+      '<svg viewBox="0 0 24 24">' +
+        '<path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/>' +
+      '</svg>' +
+    '</a>';
+  list.appendChild(row);
+});
+
+// ── Hover / image logic ──
+var current   = null;   // active .svc-row element
+var isVisible = false;  // image currently shown
+
+function placeAt(row, parallax) {
+  // Center image on row, with optional vertical parallax offset (px)
+  var top = row.offsetTop + (row.offsetHeight - IMG_H) / 2 + (parallax || 0);
+  imgWrap.style.top = top + 'px';
+  glow.style.top    = (top + 18) + 'px';
+}
+
+function activate(row) {
+  var switching = isVisible && row !== current;
+
+  if (switching) {
+    // ── Clay.global instant-swap: disable transition, swap src + position ──
+    imgWrap.style.transition = 'none';
+    glow.style.transition    = 'none';
+    imgEl.src = row.dataset.img;
+    placeAt(row);
+    // Restore transition on next frame so future fade-out still works
+    requestAnimationFrame(function () {
+      imgWrap.style.transition = '';
+      glow.style.transition    = '';
+    });
+  } else if (!isVisible) {
+    // ── First entry: fade in ──
+    imgEl.src = row.dataset.img;
+    placeAt(row);
+    imgWrap.classList.add('visible');
+    glow.classList.add('visible');
+    isVisible = true;
+  }
+
+  if (current && current !== row) current.classList.remove('active');
+  row.classList.add('active');
+  list.classList.add('has-active');
+  current = row;
+}
+
+function deactivate() {
+  // ── List leave: fade out ──
+  imgWrap.classList.remove('visible');
+  glow.classList.remove('visible');
+  isVisible = false;
+  if (current) { current.classList.remove('active'); current = null; }
+  list.classList.remove('has-active');
+}
+
+// Attach events
+var rows = list.querySelectorAll('.svc-row');
+rows.forEach(function (row) {
+  row.addEventListener('mouseenter', function () { activate(row); });
+
+  row.addEventListener('mousemove', function (e) {
+    if (current !== row) return;
+    // Light vertical parallax ±10px relative to row center
+    var rect   = row.getBoundingClientRect();
+    var relY   = (e.clientY - rect.top) / rect.height; // 0..1
+    var offset = (relY - 0.5) * 20;                    // −10..+10 px
+    placeAt(row, offset);
+  });
+});
+
+list.addEventListener('mouseleave', deactivate);
+</script>
+</body>
+</html>
