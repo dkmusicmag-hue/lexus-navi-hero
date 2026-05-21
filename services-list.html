@@ -93,23 +93,31 @@
       pointer-events: none;
     }
 
-    /* ── Glow behind image ── */
+    /* ── Glow behind image (matches Figma SVG: 350×202 core, bleeds 212px) ── */
     .float-glow {
       position: absolute;
-      left: 459px;
-      width: 400px;
-      height: 250px;
-      border-radius: 50%;
-      background: radial-gradient(ellipse at center, rgba(21,160,253,0.38) 0%, transparent 68%);
-      filter: blur(52px);
+      left: 484px;       /* same x as image */
+      width: 350px;
+      height: 202px;
       pointer-events: none;
       z-index: 9;
       opacity: 0;
       transition: opacity 0.32s ease;
+      overflow: visible;
       will-change: top;
     }
     .float-glow.visible {
       opacity: 1;
+    }
+    .float-glow img {
+      position: absolute;
+      top: -212px;
+      left: -212px;
+      width: 774px;
+      height: 626px;
+      display: block;
+      max-width: none;
+      pointer-events: none;
     }
 
     /* ── Smaller image for viewports < 1600px ── */
@@ -231,7 +239,7 @@
 
     <div class="svc-list" id="svc-list">
       <!-- Floating image layer -->
-      <div class="float-glow"     id="float-glow"></div>
+      <div class="float-glow" id="float-glow"><img src="assets/svc-list-glow.svg" alt=""></div>
       <div class="float-img-wrap" id="float-img">
         <img id="float-img-el" src="" alt="">
       </div>
@@ -335,7 +343,7 @@ function placeAt(row, parallax) {
   var imgH = getImgH();
   var top  = row.offsetTop + (row.offsetHeight - imgH) / 2 + (parallax || 0);
   imgWrap.style.top = top + 'px';
-  glow.style.top    = (top + 18) + 'px';
+  glow.style.top    = (top + 31) + 'px'; /* 31px below image top, per Figma */
 }
 
 function activate(row) {
