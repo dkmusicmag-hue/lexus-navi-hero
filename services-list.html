@@ -19,21 +19,20 @@
       transform-origin: top left;
     }
 
-    /* Atmospheric background */
-    .scene-bg {
+    /* ── Background layers (from Figma) ── */
+    .scene-bg-bottom {
       position: absolute;
-      inset: 0;
-      background: url('assets/rusification-bg.jpg') center 30% / cover no-repeat;
-      opacity: 0.18;
+      bottom: 0; left: 0;
+      width: 1918px; height: 820px;
+      background: url('assets/svc-list-bg-bottom.png') bottom left / cover no-repeat;
       pointer-events: none;
     }
-    .scene-overlay {
+    .scene-bg-top {
       position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg,
-        rgba(0,0,0,0.5) 0%,
-        rgba(0,0,0,0.15) 35%,
-        rgba(0,0,0,0.6) 100%);
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 1920px; height: 820px;
+      background: url('assets/svc-list-bg-top.png') center / cover no-repeat;
       pointer-events: none;
     }
 
@@ -181,7 +180,7 @@
       width: 64px;
       height: 40px;
       border-radius: 84px;
-      background: rgba(255,255,255,0.1);
+      background: #fff;
       border: none;
       display: flex;
       align-items: center;
@@ -194,7 +193,7 @@
     .svc-btn svg {
       width: 18px;
       height: 18px;
-      fill: #fff;
+      fill: #000;
       flex-shrink: 0;
       transition: fill 0.28s ease;
     }
@@ -209,8 +208,8 @@
 <body>
 
 <div class="scene" id="scene">
-  <div class="scene-bg"></div>
-  <div class="scene-overlay"></div>
+  <div class="scene-bg-bottom"></div>
+  <div class="scene-bg-top"></div>
 
   <div class="scene-content">
 
