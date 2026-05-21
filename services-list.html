@@ -338,12 +338,14 @@ SERVICES.forEach(function (svc) {
 var current   = null;   // active .svc-row element
 var isVisible = false;  // image currently shown
 
-function placeAt(row, parallax) {
-  // Center image on row, using responsive height
+function placeAt(row, py, px) {
+  // Center image on row with optional vertical + horizontal parallax offsets (px)
   var imgH = getImgH();
-  var top  = row.offsetTop + (row.offsetHeight - imgH) / 2 + (parallax || 0);
-  imgWrap.style.top = top + 'px';
-  glow.style.top    = (top + 31) + 'px'; /* 31px below image top, per Figma */
+  var top  = row.offsetTop + (row.offsetHeight - imgH) / 2 + (py || 0);
+  imgWrap.style.top       = top + 'px';
+  imgWrap.style.transform = 'translateX(' + (px || 0) + 'px)';
+  glow.style.top          = (top + 31) + 'px';
+  glow.style.transform    = 'translateX(' + ((px || 0) * 0.6) + 'px)'; /* glow follows at 60% */
 }
 
 function activate(row) {
@@ -391,11 +393,15 @@ rows.forEach(function (row) {
 
   row.addEventListener('mousemove', function (e) {
     if (current !== row) return;
-    // Light vertical parallax ±10px relative to row center
-    var rect   = row.getBoundingClientRect();
-    var relY   = (e.clientY - rect.top) / rect.height; // 0..1
-    var offset = (relY - 0.5) * 20;                    // −10..+10 px
-    placeAt(row, offset);
+    var rowRect  = row.getBoundingClientRect();
+    var listRect = list.getBoundingClientRect();
+    // Vertical: ±10px relative to row center
+    var relY  = (e.clientY - rowRect.top)   / rowRect.height;
+    var offsetY = (relY - 0.5) * 20;
+    // Horizontal: ±8px relative to full list width (slow drift across the page)
+    var relX    = (e.clientX - listRect.left) / listRect.width;
+    var offsetX = (relX - 0.5) * 16;
+    placeAt(row, offsetY, offsetX);
   });
 });
 
